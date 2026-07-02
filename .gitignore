@@ -1,0 +1,15 @@
+# Секреты и ключи
+.env
+
+# Временные файлы Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Временные файлы ОС
+.DS_Store
+Thumbs.db
+
+# Логи и временные данные
+*.log
+objects/.DS_Store
