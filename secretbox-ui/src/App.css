@@ -1,6 +1,5 @@
-/* Глобальные параметры среды */
 body {
-  background-color: #0f111a; /* Глубокий космос */
+  background-color: #0f111a;
   margin: 0;
   padding: 0;
 }
@@ -16,20 +15,124 @@ body {
   padding: 40px 20px;
 }
 
-h1 {
-  color: #00e5ff; /* Фирменный голографический голубой */
-  text-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+.header-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  position: relative;
+  width: 100%;
+  max-width: 850px;
   margin-bottom: 30px;
+}
+
+h1 {
+  color: #00e5ff;
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+  margin: 0;
   font-size: 2.5rem;
+}
+
+.secure-title {
+  color: #ff4a4a;
+  text-shadow: 0 0 15px rgba(255, 74, 74, 0.3);
+  margin-bottom: 20px;
 }
 
 h2 {
   color: #ffffff;
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  text-align: center;
 }
 
-/* Навигационные панели (Вкладки) */
+/* Кнопка сброса авторизации */
+.logout-btn {
+  position: absolute;
+  right: 0;
+  padding: 10px 20px;
+  background: #ff4a4a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #ff2a2a;
+}
+
+/* Модуль авторизации */
+.login-card {
+  background: #111420;
+  border: 1px solid #1e2338;
+  padding: 45px;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  margin-top: 20px;
+  box-sizing: border-box;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.input-group label {
+  color: #94a3b8;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-group input {
+  padding: 14px;
+  background: #161925;
+  border: 1px solid #1e2338;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-group input:focus {
+  border-color: #00e5ff;
+}
+
+.error-text {
+  color: #ff4a4a;
+  font-size: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #00e5ff, #00a8ff);
+  color: #0f111a;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 229, 255, 0.45);
+}
+
+/* Навигация */
 .tabs {
   display: flex;
   gap: 15px;
@@ -61,7 +164,6 @@ h2 {
   box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
 }
 
-/* Обертка интерфейсных модулей */
 .tab-content-wrapper {
   position: relative;
   width: 100%;
@@ -74,7 +176,7 @@ h2 {
   position: absolute;
   top: 0;
   left: 0;
-  background: #111420; /* Матовая темная броня */
+  background: #111420;
   padding: 35px;
   border-radius: 18px;
   border: 1px solid #1e2338;
@@ -85,7 +187,6 @@ h2 {
   display: none;
 }
 
-/* Анимационный протокол скольжения */
 .slide-in {
   animation: slideInRight 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
@@ -101,7 +202,6 @@ h2 {
   }
 }
 
-/* Селекторы выбора */
 .shop-select {
   width: 100%;
   padding: 14px;
@@ -112,43 +212,12 @@ h2 {
   background-color: #161925;
   color: #ffffff;
   outline: none;
-  transition: border-color 0.3s;
 }
 
 .shop-select:focus {
   border-color: #00e5ff;
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
 }
 
-/* Кнопка запуска ИИ-анализа */
-.analysis-btn {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, #00e5ff, #00a8ff);
-  color: #0f111a;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-bottom: 25px;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.25);
-}
-
-.analysis-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(0, 229, 255, 0.45);
-}
-
-.analysis-btn:disabled {
-  background: #1e2338;
-  color: #4a5568;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Таблицы вывода данных */
 .table-container {
   overflow-x: auto;
   width: 100%;
