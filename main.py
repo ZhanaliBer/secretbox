@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 app = FastAPI()
 
-# Настройка безопасности CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,20 +19,29 @@ DATA_DIR = "objects"
 AI_TOKEN = os.environ.get("AI_TOKEN")
 CACHE_FILE = "analytics_cache.json"
 
-# Конфигурация криптографии
 SECRET_KEY = "stark-industries-quantum-encryption-key"
 ALGORITHM = "HS256"
 DB_FILE = "users.db"
 
-# Автономная инициализация базы данных SQL
+# Автономная инициализация базы данных SQL (теперь с таблицей чата)
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+    # Таблица операторов
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL
+        )
+    """)
+    # Таблица сообщений
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            text TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
     conn.commit()
@@ -51,7 +59,6 @@ def parse_to_dict(filename):
     except: pass
     return items
 
-# Проверка цифрового пропуска (JWT)
 def verify_token(authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Доступ заблокирован: требуется авторизация")
@@ -64,7 +71,6 @@ def verify_token(authorization: str = Header(None)):
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Критическая ошибка: неверный ключ доступа")
 
-# Маршрут РЕГИСТРАЦИИ (Прямое шифрование bcrypt)
 @app.post("/register")
 def register(data: dict):
     username = data.get("username")
@@ -73,7 +79,6 @@ def register(data: dict):
     if not username or not password:
         raise HTTPException(status_code=400, detail="Логин и пароль не могут быть пустыми")
         
-    # Генерируем соль и хэшируем пароль напрямую
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
     
@@ -89,7 +94,6 @@ def register(data: dict):
         
     return {"status": "success", "detail": "Оператор успешно внесен в базу данных"}
 
-# Маршрут АВТОРИЗАЦИИ (Прямая валидация bcrypt)
 @app.post("/login")
 def login(data: dict):
     username = data.get("username")
@@ -101,14 +105,39 @@ def login(data: dict):
     row = cursor.fetchone()
     conn.close()
     
-    # Сравниваем введенный пароль с хэшем из базы
     if not row or not bcrypt.checkpw(password.encode('utf-8'), row[0].encode('utf-8')):
         raise HTTPException(status_code=400, detail="Неверное имя оператора или крипто-ключ")
         
-    # Создаем токен на 12 часов
     exp = datetime.datetime.utcnow() + datetime.timedelta(hours=12)
     token = jwt.encode({"sub": username, "exp": exp}, SECRET_KEY, algorithm=ALGORITHM)
     return {"token": token}
+
+# --- НОВЫЕ МАРШРУТЫ ДЛЯ ЧАТА ---
+@app.post("/chat")
+def post_message(data: dict, username: str = Depends(verify_token)):
+    text = data.get("text")
+    if not text:
+        raise HTTPException(status_code=400, detail="Сообщение не может быть пустым")
+        
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO messages (username, text) VALUES (?, ?)", (username, text))
+    conn.commit()
+    conn.close()
+    return {"status": "success"}
+
+@app.get("/chat")
+def get_messages(username: str = Depends(verify_token)):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    # Получаем последние 50 сообщений
+    cursor.execute("SELECT username, text, timestamp FROM messages ORDER BY timestamp ASC LIMIT 50")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    messages = [{"username": r[0], "text": r[1], "timestamp": r[2]} for r in rows]
+    return {"messages": messages}
+# -------------------------------
 
 @app.get("/coffee-shops")
 def get_shops(username: str = Depends(verify_token)):

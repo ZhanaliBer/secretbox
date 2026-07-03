@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API_URL = 'https://secretbox-main.onrender.com'; 
-//const API_URL = 'http://127.0.0.1:8000'; 
+//const API_URL = 'https://secretbox-main.onrender.com'; 
+const API_URL = 'http://127.0.0.1:8000'; 
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [isRegisterMode, setIsRegisterMode] = useState(false); // Режим формы (вход/регистрация)
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -21,9 +21,23 @@ function App() {
   const [analyticsData, setAnalyticsData] = useState([]);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
 
+  // Состояния для чата
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const messagesEndRef = useRef(null);
+
   const getAuthHeader = () => ({
     headers: { Authorization: `Bearer ${token}` }
   });
+
+  // Автоматическая прокрутка чата вниз
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
 
   useEffect(() => {
     if (!token) return;
@@ -58,7 +72,23 @@ function App() {
       });
   }, [token]);
 
-  // Протокол Входа (Авторизация)
+  // Загрузка сообщений чата и живое обновление (Polling)
+  const fetchChatMessages = () => {
+    axios.get(`${API_URL}/chat`, getAuthHeader())
+      .then(response => setChatMessages(response.data.messages))
+      .catch(error => console.error("Ошибка загрузки чата:", error));
+  };
+
+  useEffect(() => {
+    let interval;
+    if (activeTab === 'chat' && token) {
+      fetchChatMessages(); // Первичная загрузка
+      interval = setInterval(fetchChatMessages, 3000); // Обновление каждые 3 секунды
+    }
+    return () => clearInterval(interval);
+  }, [activeTab, token]);
+
+
   const handleLogin = (e) => {
     e.preventDefault();
     setMessage('');
@@ -76,7 +106,6 @@ function App() {
       });
   };
 
-  // Протокол Регистрации
   const handleRegister = (e) => {
     e.preventDefault();
     setMessage('');
@@ -85,7 +114,6 @@ function App() {
       .then(response => {
         setIsSuccess(true);
         setMessage(response.data.detail);
-        // После успешной регистрации переводим пользователя на форму входа
         setIsRegisterMode(false);
         setPassword('');
       })
@@ -101,6 +129,20 @@ function App() {
     setSelectedShop('');
     setMenu({});
     setAnalyticsData([]);
+    setChatMessages([]);
+  };
+
+  // Отправка сообщения в чат
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    
+    axios.post(`${API_URL}/chat`, { text: chatInput }, getAuthHeader())
+      .then(() => {
+        setChatInput('');
+        fetchChatMessages();
+      })
+      .catch(error => console.error("Ошибка отправки:", error));
   };
 
   const getAnalyticsColumns = () => {
@@ -116,7 +158,6 @@ function App() {
 
   const analyticsColumns = getAnalyticsColumns();
 
-  // СЦЕНАРИЙ А: Экраны блокировки и регистрации
   if (!token) {
     return (
       <div className="app-container">
@@ -165,7 +206,6 @@ function App() {
     );
   }
 
-  // СЦЕНАРИЙ Б: Основной комплекс SECRETBOX
   return (
     <div className="app-container">
       <div className="header-wrapper">
@@ -185,6 +225,12 @@ function App() {
           onClick={() => setActiveTab('analytics')}
         >
           📊 Аналитика
+        </button>
+        <button 
+          className={activeTab === 'chat' ? 'active' : ''} 
+          onClick={() => setActiveTab('chat')}
+        >
+          💬 Общий чат
         </button>
       </div>
 
@@ -252,6 +298,38 @@ function App() {
               </div>
             )
           )}
+        </div>
+
+        {/* НОВЫЙ МОДУЛЬ: ЧАТ */}
+        <div className={`tab-panel ${activeTab === 'chat' ? 'slide-in' : 'hidden'}`}>
+          <h2>Канал связи операторов</h2>
+          
+          <div className="chat-window">
+            <div className="chat-messages">
+              {chatMessages.length === 0 ? (
+                <p className="empty-chat">Сообщений пока нет. Начните передачу данных.</p>
+              ) : (
+                chatMessages.map((msg, index) => (
+                  <div key={index} className="chat-message">
+                    <span className="chat-author">{msg.username}</span>
+                    <span className="chat-time">{new Date(msg.timestamp + 'Z').toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <p className="chat-text">{msg.text}</p>
+                  </div>
+                ))
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+            
+            <form className="chat-input-area" onSubmit={handleSendMessage}>
+              <input 
+                type="text" 
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Ввести сообщение..." 
+              />
+              <button type="submit">Отправить</button>
+            </form>
+          </div>
         </div>
 
       </div>
