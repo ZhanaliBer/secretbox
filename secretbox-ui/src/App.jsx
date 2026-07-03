@@ -3,13 +3,15 @@ import axios from 'axios';
 import './App.css';
 
 const API_URL = 'https://secretbox-main.onrender.com'; 
+//const API_URL = 'http://127.0.0.1:8000'; 
 
 function App() {
-  // Проверка сессии в локальном хранилище браузера
   const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [isRegisterMode, setIsRegisterMode] = useState(false); // Режим формы (вход/регистрация)
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [activeTab, setActiveTab] = useState('catalog');
   const [shops, setShops] = useState([]);
@@ -19,35 +21,29 @@ function App() {
   const [analyticsData, setAnalyticsData] = useState([]);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
 
-  // Сборка заголовка с токеном для отправки бэкенду
   const getAuthHeader = () => ({
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  // Загрузка списка кофеен
   useEffect(() => {
     if (!token) return;
     axios.get(`${API_URL}/coffee-shops`, getAuthHeader())
       .then(response => setShops(response.data.shops))
       .catch(error => {
-        console.error("Ошибка связи с базой:", error);
         if (error.response?.status === 401) handleLogout();
       });
   }, [token]);
 
-  // Загрузка меню конкретной кофейни
   useEffect(() => {
     if (selectedShop && token) {
       axios.get(`${API_URL}/menu/${selectedShop}`, getAuthHeader())
         .then(response => setMenu(response.data.menu))
         .catch(error => {
-          console.error("Ошибка загрузки меню:", error);
           if (error.response?.status === 401) handleLogout();
         });
     }
   }, [selectedShop, token]);
 
-  // Автоматический запрос ИИ-аналитики
   useEffect(() => {
     if (!token) return;
     setLoadingAnalysis(true);
@@ -57,28 +53,47 @@ function App() {
         setLoadingAnalysis(false);
       })
       .catch(error => {
-        console.error("Ошибка аналитики:", error);
         setLoadingAnalysis(false);
         if (error.response?.status === 401) handleLogout();
       });
   }, [token]);
 
-  // Протокол авторизации
+  // Протокол Входа (Авторизация)
   const handleLogin = (e) => {
     e.preventDefault();
-    setLoginError('');
+    setMessage('');
+    setIsSuccess(false);
     axios.post(`${API_URL}/login`, { username, password })
       .then(response => {
         const receivedToken = response.data.token;
         localStorage.setItem('token', receivedToken);
         setToken(receivedToken);
+        setUsername('');
+        setPassword('');
       })
       .catch(error => {
-        setLoginError(error.response?.data?.detail || 'Ошибка авторизации');
+        setMessage(error.response?.data?.detail || 'Ошибка авторизации');
       });
   };
 
-  // Протокол деавторизации (выход)
+  // Протокол Регистрации
+  const handleRegister = (e) => {
+    e.preventDefault();
+    setMessage('');
+    setIsSuccess(false);
+    axios.post(`${API_URL}/register`, { username, password })
+      .then(response => {
+        setIsSuccess(true);
+        setMessage(response.data.detail);
+        // После успешной регистрации переводим пользователя на форму входа
+        setIsRegisterMode(false);
+        setPassword('');
+      })
+      .catch(error => {
+        setMessage(error.response?.data?.detail || 'Ошибка регистрации');
+      });
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     setToken('');
@@ -101,26 +116,26 @@ function App() {
 
   const analyticsColumns = getAnalyticsColumns();
 
-  // СЦЕНАРИЙ А: Экран блокировки (если токен отсутствует)
+  // СЦЕНАРИЙ А: Экраны блокировки и регистрации
   if (!token) {
     return (
       <div className="app-container">
         <h1 className="secure-title">🔒 SECRETBOX ACCESS</h1>
         <div className="login-card">
-          <h2>Идентификация терминала</h2>
-          <form onSubmit={handleLogin}>
+          <h2>{isRegisterMode ? 'Регистрация' : 'Авторизация'}</h2>
+          <form onSubmit={isRegisterMode ? handleRegister : handleLogin}>
             <div className="input-group">
-              <label>Оператор</label>
+              <label>Логин</label>
               <input 
                 type="text" 
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)} 
-                placeholder="Ведите логин..."
+                placeholder="Ведите имя..."
                 required 
               />
             </div>
             <div className="input-group">
-              <label>Крипто-ключ доступа</label>
+              <label>Пароль</label>
               <input 
                 type="password" 
                 value={password} 
@@ -129,20 +144,33 @@ function App() {
                 required 
               />
             </div>
-            {loginError && <p className="error-text">{loginError}</p>}
-            <button type="submit" className="login-btn">Получить доступ</button>
+            
+            {message && <p className={isSuccess ? "success-text" : "error-text"}>{message}</p>}
+            
+            <button type="submit" className="login-btn">
+              {isRegisterMode ? 'Зарегаться' : 'Получить доступ'}
+            </button>
           </form>
+
+          <div className="toggle-mode-container">
+            <button className="toggle-mode-btn" onClick={() => {
+              setIsRegisterMode(!isRegisterMode);
+              setMessage('');
+            }}>
+              {isRegisterMode ? '← Вернуться к авторизации' : 'Зарегистрировать новый аккаунт →'}
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  // СЦЕНАРИЙ Б: Основной интерфейс (доступ разрешен)
+  // СЦЕНАРИЙ Б: Основной комплекс SECRETBOX
   return (
     <div className="app-container">
       <div className="header-wrapper">
         <h1>☕ SECRETBOX 📦</h1>
-        <button className="logout-btn" onClick={handleLogout}>Блокировать 🔓</button>
+        <button className="logout-btn" onClick={handleLogout}>Лог аут 🔓</button>
       </div>
       
       <div className="tabs">
@@ -162,7 +190,6 @@ function App() {
 
       <div className="tab-content-wrapper">
         
-        {/* Модуль: Каталог */}
         <div className={`tab-panel ${activeTab === 'catalog' ? 'slide-in' : 'hidden'}`}>
           <h2>Просмотр меню</h2>
           <select 
@@ -196,7 +223,6 @@ function App() {
           )}
         </div>
 
-        {/* Модуль: Аналитика */}
         <div className={`tab-panel ${activeTab === 'analytics' ? 'slide-in' : 'hidden'}`}>
           <h2>Сравнение цен через ИИ</h2>
           

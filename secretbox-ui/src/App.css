@@ -252,3 +252,31 @@ h2 {
 .menu-table tr:hover {
   background-color: #161925;
 }
+
+/* Дополнительные стили для переключателя режимов */
+.toggle-mode-container {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.toggle-mode-btn {
+  background: none;
+  border: none;
+  color: #00e5ff;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.toggle-mode-btn:hover {
+  color: #ffffff;
+}
+
+.success-text {
+  color: #00ff66;
+  font-size: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+}

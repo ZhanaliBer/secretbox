@@ -4,3 +4,5 @@ streamlit
 pandas
 requests
 python-dotenv
+bcrypt
+PyJWT
