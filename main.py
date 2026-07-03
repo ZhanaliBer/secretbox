@@ -1,30 +1,24 @@
 from fastapi import FastAPI
-import glob, re, os, json, requests
-from dotenv import load_dotenv
-load_dotenv() # Эта команда загрузит переменные из .env в os.environ
-app = FastAPI()
-
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware # Добавляем импорт
+from fastapi.middleware.cors import CORSMiddleware
 import glob, re, os, json, requests
 from dotenv import load_dotenv
 
 load_dotenv()
 app = FastAPI()
 
-# --- НАСТРОЙКА CORS ---
+# Разрешаем фронтенду общаться с бэкендом
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # В продакшене заменим на URL вашего фронтенда
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# ----------------------
 
-
-DATA_DIR = "objects" # Возвращаем жесткую привязку
+DATA_DIR = "objects"
 AI_TOKEN = os.environ.get("AI_TOKEN")
+CACHE_FILE = "analytics_cache.json"
+
 def parse_to_dict(filename):
     items = {}
     try:
@@ -37,7 +31,6 @@ def parse_to_dict(filename):
 
 @app.get("/coffee-shops")
 def get_shops():
-    # Ищем строго в папке objects
     files = glob.glob(os.path.join(DATA_DIR, "*_menu.txt"))
     return {"shops": [os.path.basename(f).replace("_menu.txt", "") for f in files]}
 
@@ -48,10 +41,15 @@ def get_menu(shop_name: str):
 
 @app.get("/analytics/compare")
 def compare_prices():
+    # 1. Проверяем наличие закэшированной аналитики
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+            
+    # 2. Если кэша нет, инициируем запрос к нейросети
     files = glob.glob(os.path.join(DATA_DIR, "*_menu.txt"))
     all_menus = {os.path.basename(f).replace("_menu.txt", ""): parse_to_dict(f) for f in files}
     
-    # Промпт для ИИ
     prompt = f"Нормализуй названия на русский и найди пересечения: {json.dumps(all_menus, ensure_ascii=False)}. Формат: {{\"common_items\": [{{\"item_name\": \"...\", \"prices\": {{\"Кофейня\": \"цена\"}}}}]}}"
     
     headers = {"Authorization": f"Bearer {AI_TOKEN}", "Content-Type": "application/json"}
@@ -67,4 +65,9 @@ def compare_prices():
         prices = [int(re.sub(r'\D', '', str(p))) for p in item["prices"].values() if re.sub(r'\D', '', str(p))]
         if prices: row["Разброс"] = max(prices) - min(prices)
         result.append(row)
+        
+    # 3. Сохраняем результат для будущих запросов
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=4)
+        
     return result
