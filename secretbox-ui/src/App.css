@@ -1,0 +1,185 @@
+/* Глобальные параметры среды */
+body {
+  background-color: #0f111a; /* Глубокий космос */
+  margin: 0;
+  padding: 0;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  color: #f1f5f9;
+  overflow-x: hidden;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+h1 {
+  color: #00e5ff; /* Фирменный голографический голубой */
+  text-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+  margin-bottom: 30px;
+  font-size: 2.5rem;
+}
+
+h2 {
+  color: #ffffff;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+/* Навигационные панели (Вкладки) */
+.tabs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 35px;
+}
+
+.tabs button {
+  padding: 12px 35px;
+  cursor: pointer;
+  border: 1px solid #23283b;
+  background: #161925;
+  color: #94a3b8;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tabs button:hover {
+  border-color: #00e5ff;
+  color: #ffffff;
+  background: #1e2230;
+}
+
+.tabs button.active {
+  background: #00e5ff;
+  color: #0f111a;
+  border-color: #00e5ff;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+}
+
+/* Обертка интерфейсных модулей */
+.tab-content-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 850px;
+}
+
+.tab-panel {
+  width: 100%;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #111420; /* Матовая темная броня */
+  padding: 35px;
+  border-radius: 18px;
+  border: 1px solid #1e2338;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+}
+
+.hidden {
+  display: none;
+}
+
+/* Анимационный протокол скольжения */
+.slide-in {
+  animation: slideInRight 0.45s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes slideInRight {
+  0% {
+    transform: translateX(25vw);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Селекторы выбора */
+.shop-select {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 25px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #1e2338;
+  background-color: #161925;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.shop-select:focus {
+  border-color: #00e5ff;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+}
+
+/* Кнопка запуска ИИ-анализа */
+.analysis-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #00e5ff, #00a8ff);
+  color: #0f111a;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 25px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.25);
+}
+
+.analysis-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 229, 255, 0.45);
+}
+
+.analysis-btn:disabled {
+  background: #1e2338;
+  color: #4a5568;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Таблицы вывода данных */
+.table-container {
+  overflow-x: auto;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.menu-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.menu-table th, .menu-table td {
+  border-bottom: 1px solid #1e2338;
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.menu-table th {
+  background-color: #161925;
+  color: #00e5ff;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.menu-table td {
+  color: #cbd5e1;
+}
+
+.menu-table tr:hover {
+  background-color: #161925;
+}

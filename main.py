@@ -3,6 +3,26 @@ import glob, re, os, json, requests
 from dotenv import load_dotenv
 load_dotenv() # Эта команда загрузит переменные из .env в os.environ
 app = FastAPI()
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware # Добавляем импорт
+import glob, re, os, json, requests
+from dotenv import load_dotenv
+
+load_dotenv()
+app = FastAPI()
+
+# --- НАСТРОЙКА CORS ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # В продакшене заменим на URL вашего фронтенда
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ----------------------
+
+
 DATA_DIR = "objects" # Возвращаем жесткую привязку
 AI_TOKEN = os.environ.get("AI_TOKEN")
 def parse_to_dict(filename):
